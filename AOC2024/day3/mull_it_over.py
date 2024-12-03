@@ -4,30 +4,27 @@ from argparse import ArgumentParser
 
 
 def tally_mults(input: str, logic: bool = False) -> int:
-    mult_pattern_string: Pattern = compile(r"mul\((\d{1,3}),(\d{1,3})\)")
+    mult_pattern: Pattern = compile(r"mul\((\d{1,3}),(\d{1,3})\)")
     logic_pattern: Pattern = compile(r"do(n't)?")
     index: int = 0
     enabled: bool = True
     total = 0
     while index < len(input):
         current_char = input[index]
+        match = None
         if current_char == "m":
-            match = mult_pattern_string.match(input, index, index + 12)
-            if match is None:
-                index += 1
-                continue
-            if enabled:
+            match = mult_pattern.match(input, index, index + 12)
+            if enabled and match is not None:
                 total += int(match.group(1)) * int(match.group(2))
-            index = match.end()
-        elif logic and input[index] == "d":
+        elif logic and current_char == "d":
             match = logic_pattern.match(input, index, index + 5)
-            if match is None:
-                index += 1
-                continue
-            enabled = match.group() == "do"
-            index = match.end()
-        else:
+            if match is not None:
+                enabled = match.group() == "do"
+
+        if match is None:
             index += 1
+        else:
+            index = match.end()
     return total
 
 
