@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 
 def tally_mults(input: str, logic: bool = False) -> int:
     mult_pattern: Pattern = compile(r"mul\((\d{1,3}),(\d{1,3})\)")
-    logic_pattern: Pattern = compile(r"do(n't)?")
+    logic_pattern: Pattern = compile(r"do(n't)?\(\)")
     index: int = 0
     enabled: bool = True
     total = 0
@@ -17,9 +17,9 @@ def tally_mults(input: str, logic: bool = False) -> int:
             if enabled and match is not None:
                 total += int(match.group(1)) * int(match.group(2))
         elif logic and current_char == "d":
-            match = logic_pattern.match(input, index, index + 5)
+            match = logic_pattern.match(input, index, index + 7)
             if match is not None:
-                enabled = match.group() == "do"
+                enabled = match.group() == "do()"
 
         if match is None:
             index += 1
