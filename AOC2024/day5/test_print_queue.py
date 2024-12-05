@@ -5,6 +5,7 @@ from print_queue import (
     check_update,
     split_updates_by_correctness,
     correctly_ordered_middle_page_total,
+    incorrectly_ordered_middle_page_total,
     parse_rule,
     parse_update,
     parse,
@@ -73,5 +74,11 @@ def test_check_good_update(rules, update, expected_result):
 
 def test_correctly_ordered_middle_page_total(updates, rules):
     correct_updates, _ = split_updates_by_correctness(updates, rules)
-    total = correctly_ordered_middle_page_total(correct_updates, rules)
+    total = correctly_ordered_middle_page_total(correct_updates)
     assert total == 143
+
+
+def test_incorrectly_ordered_middle_page_total(updates, rules):
+    _, incorrect_updates = split_updates_by_correctness(updates, rules)
+    total = incorrectly_ordered_middle_page_total(incorrect_updates, rules)
+    assert total == 123
