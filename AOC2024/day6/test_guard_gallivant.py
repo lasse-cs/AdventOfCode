@@ -17,7 +17,7 @@ def test_patrol():
     file = Path(".") / "files" / "test_input.txt"
     guard = parse(file)
     visited_cells = guard.patrol()
-    assert visited_cells == 41
+    assert len(visited_cells) == 41
 
 
 def test_count_obstructables():

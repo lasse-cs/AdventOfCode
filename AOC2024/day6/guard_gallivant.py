@@ -50,6 +50,10 @@ class Board:
         self.cells[cl.row][cl.column] = cell
 
 
+class LoopException(Exception):
+    pass
+
+
 class Guard:
     def __init__(self, location: CellLocation, direction: Direction, board: Board):
         self.start_direction = direction
@@ -60,33 +64,32 @@ class Guard:
         self.location = self.start_location
         self.direction = self.start_direction
 
-    def patrol(self) -> int:
+    def patrol(self) -> set[CellLocation]:
         self.reset()
         visited: set[tuple[CellLocation, Direction]] = set()
         while self.board.is_location_on_board(self.location):
             if (self.location, self.direction) in visited:
-                return -1
+                raise LoopException
             elif self.board[self.location] == Cell.FREE:
                 visited.add((self.location, self.direction))
             elif self.board[self.location] == Cell.BLOCKED:
                 self.undo_move()
                 self.turn()
             self.move()
-        return len({v[0] for v in visited})
+        return {v[0] for v in visited}
 
     def count_obstructables(self) -> int:
         total: int = 0
-        for row_index, row in enumerate(self.board.cells):
-            for column_index, cell in enumerate(row):
-                if cell == Cell.BLOCKED:
-                    continue
-                location = CellLocation(row_index, column_index)
-                if location == self.start_location:
-                    continue
-                self.board[location] = Cell.BLOCKED
-                if self.patrol() == -1:
-                    total += 1
-                self.board[location] = Cell.FREE
+        possible_obstructions: set[CellLocation] = self.patrol()
+        for cl in possible_obstructions:
+            if cl == self.start_location:
+                continue
+            self.board[cl] = Cell.BLOCKED
+            try:
+                self.patrol()
+            except LoopException:
+                total += 1
+            self.board[cl] = Cell.FREE
         return total
 
     def turn(self):
@@ -134,7 +137,7 @@ if __name__ == "__main__":
 
     guard = parse(file)
     visited = guard.patrol()
-    print(f"The guard visited {visited} cells on patrol")
+    print(f"The guard visited {len(visited)} cells on patrol")
 
     obstruct = guard.count_obstructables()
     print(f"There are {obstruct} places to obstruct")
