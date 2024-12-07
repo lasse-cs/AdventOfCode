@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import NamedTuple, Callable
 from operator import add, mul
-from itertools import product
+from itertools import product, chain
 
 
 Operator = Callable[[int, int], int]
@@ -17,8 +17,8 @@ def concat(a: int, b: int) -> int:
     return (10**count) * a + b
 
 
-BASE_OPERATORS = [add, mul]
-EXTENDED_OPERATORS = [*BASE_OPERATORS, concat]
+BASE_OPERATORS: list[Operator] = [add, mul]
+EXTENDED_OPERATORS: list[Operator] = [*BASE_OPERATORS, concat]
 
 
 class Callibration(NamedTuple):
@@ -28,12 +28,10 @@ class Callibration(NamedTuple):
     def is_possible(self, operators: list[Operator] | None = None) -> bool:
         if operators is None:
             operators = BASE_OPERATORS
-        if len(self.items) == 1:
-            return self.items[0] == self.target
         for combination in product(operators, repeat=len(self.items) - 1):
-            acc: int = self.items[0]
-            for i, op in enumerate(combination):
-                acc = op(acc, self.items[i + 1])
+            acc: int = 0
+            for item, op in zip(self.items, chain([add], combination)):
+                acc = op(acc, item)
             if acc == self.target:
                 return True
         return False
