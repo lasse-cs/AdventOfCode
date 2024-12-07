@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from pathlib import Path
-import time
 from typing import NamedTuple, Callable
 from operator import add, mul
 
@@ -91,13 +90,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     file = Path(args.filename)
 
-    start = time.perf_counter()
     callibrations: list[Callibration] = parse(file)
     total: int = total_possible_callibrations(callibrations)
     print(f"The total of possible callibrations is {total}")
 
     extended_total: int = total_extended_possible_callibrations(callibrations)
     print(f"The total of extended possible callibrations is {extended_total}")
-    end = time.perf_counter()
-
-    print(f"{end - start}")
