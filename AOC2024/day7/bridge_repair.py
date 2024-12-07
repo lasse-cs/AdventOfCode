@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import NamedTuple, Callable
+from typing import NamedTuple, Callable, Iterable
 from operator import add, mul
 
 
@@ -40,39 +40,35 @@ class Callibration(NamedTuple):
             return accumulator == self.target
 
         accumulator = operator(accumulator, self.items[index])
-        for op in operators:
-            if self._is_possible(accumulator, op, index + 1, operators):
-                return True
-
-        return False
+        return any(
+            (
+                self._is_possible(accumulator, op, index + 1, operators)
+                for op in operators
+            )
+        )
 
 
 def total_possible_callibrations(callibrations: list[Callibration]) -> int:
-    total: int = 0
-    for callibration in callibrations:
-        if not callibration.is_possible():
-            continue
-        total += callibration.target
-    return total
+    possible_callibrations: Iterable[int] = (
+        callibration.target
+        for callibration in callibrations
+        if callibration.is_possible()
+    )
+    return sum(possible_callibrations)
 
 
 def total_extended_possible_callibrations(callibrations: list[Callibration]) -> int:
-    total: int = 0
-    for callibration in callibrations:
-        if not callibration.is_possible():
-            if not callibration.is_possible(EXTENDED_OPERATORS):
-                continue
-        total += callibration.target
-    return total
+    possible_callibrations: Iterable[int] = (
+        callibration.target
+        for callibration in callibrations
+        if callibration.is_possible() or callibration.is_possible(EXTENDED_OPERATORS)
+    )
+    return sum(possible_callibrations)
 
 
 def parse(file: Path) -> list[Callibration]:
-    callibrations: list[Callibration] = []
     with open(file, "r") as f:
-        for line in f:
-            callibration: Callibration = parse_callibration(line.strip())
-            callibrations.append(callibration)
-    return callibrations
+        return [parse_callibration(line.strip()) for line in f]
 
 
 def parse_callibration(input: str) -> Callibration:
