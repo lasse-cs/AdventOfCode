@@ -35,7 +35,7 @@ class Callibration(NamedTuple):
         operator: Operator,
         index: int,
         operators: list[Operator],
-    ):
+    ) -> bool:
         if index == len(self.items):
             return accumulator == self.target
 
@@ -58,10 +58,9 @@ def total_possible_callibrations(callibrations: list[Callibration]) -> int:
 
 def total_extended_possible_callibrations(callibrations: list[Callibration]) -> int:
     total: int = 0
-    extended_operations: list[Operator] = [add, mul, concat]
     for callibration in callibrations:
         if not callibration.is_possible():
-            if not callibration.is_possible(extended_operations):
+            if not callibration.is_possible(EXTENDED_OPERATORS):
                 continue
         total += callibration.target
     return total
