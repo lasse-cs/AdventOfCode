@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 from pathlib import Path
+import time
 from typing import NamedTuple, Callable
 from operator import add, mul
-from itertools import product, chain
 
 
 Operator = Callable[[int, int], int]
@@ -28,12 +28,23 @@ class Callibration(NamedTuple):
     def is_possible(self, operators: list[Operator] | None = None) -> bool:
         if operators is None:
             operators = BASE_OPERATORS
-        for combination in product(operators, repeat=len(self.items) - 1):
-            acc: int = 0
-            for item, op in zip(self.items, chain([add], combination)):
-                acc = op(acc, item)
-            if acc == self.target:
+        return self._is_possible(0, add, 0, operators)
+
+    def _is_possible(
+        self,
+        accumulator: int,
+        operator: Operator,
+        index: int,
+        operators: list[Operator],
+    ):
+        if index == len(self.items):
+            return accumulator == self.target
+
+        accumulator = operator(accumulator, self.items[index])
+        for op in operators:
+            if self._is_possible(accumulator, op, index + 1, operators):
                 return True
+
         return False
 
 
@@ -80,9 +91,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     file = Path(args.filename)
 
+    start = time.perf_counter()
     callibrations: list[Callibration] = parse(file)
     total: int = total_possible_callibrations(callibrations)
     print(f"The total of possible callibrations is {total}")
 
     extended_total: int = total_extended_possible_callibrations(callibrations)
     print(f"The total of extended possible callibrations is {extended_total}")
+    end = time.perf_counter()
+
+    print(f"{end - start}")
