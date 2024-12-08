@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import NamedTuple, Callable, Iterable
+from typing import NamedTuple, Callable
 from operator import add, mul
 
 
@@ -38,18 +38,17 @@ class Callibration(NamedTuple):
     ) -> bool:
         if index == len(self.items):
             return accumulator == self.target
+        elif accumulator >= self.target:
+            return False
 
         accumulator = operator(accumulator, self.items[index])
         return any(
-            (
-                self._is_possible(accumulator, op, index + 1, operators)
-                for op in operators
-            )
+            self._is_possible(accumulator, op, index + 1, operators) for op in operators
         )
 
 
 def total_possible_callibrations(callibrations: list[Callibration]) -> int:
-    possible_callibrations: Iterable[int] = (
+    possible_callibrations = (
         callibration.target
         for callibration in callibrations
         if callibration.is_possible()
@@ -58,7 +57,7 @@ def total_possible_callibrations(callibrations: list[Callibration]) -> int:
 
 
 def total_extended_possible_callibrations(callibrations: list[Callibration]) -> int:
-    possible_callibrations: Iterable[int] = (
+    possible_callibrations = (
         callibration.target
         for callibration in callibrations
         if callibration.is_possible() or callibration.is_possible(EXTENDED_OPERATORS)
