@@ -1,4 +1,4 @@
-from resonant_collinearity import parse, Location, Map, Antenna
+from resonant_collinearity import parse, Location, Map
 from pathlib import Path
 import pytest
 
@@ -20,9 +20,7 @@ def line_sample_input() -> Path:
 
 def test_parse(simple_sample_input: Path) -> None:
     parsed_map: Map = parse(simple_sample_input)
-    expected_map: Map = Map(
-        10, 10, {"a": [Antenna(Location(3, 4), "a"), Antenna(Location(5, 5), "a")]}
-    )
+    expected_map: Map = Map(10, 10, {"a": [Location(3, 4), Location(5, 5)]})
     assert parsed_map == expected_map
 
 

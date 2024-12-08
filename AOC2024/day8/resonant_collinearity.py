@@ -29,28 +29,23 @@ class Direction(NamedTuple):
         return Direction(self.row // common_div, self.column // common_div)
 
 
-class Antenna(NamedTuple):
-    location: Location
-    frequency: str
-
-
 class Map(NamedTuple):
     rows: int
     columns: int
-    antenna_locations: dict[str, list[Antenna]]
+    antenna_locations: dict[str, list[Location]]
 
     def find_point_antinodes(self) -> set[Location]:
         antinodes: set[Location] = set()
         for antenna_list in self.antenna_locations.values():
             for combination in combinations(antenna_list, r=2):
                 first_antenna, second_antenna = combination
-                direction = first_antenna.location.direction_to(second_antenna.location)
+                direction = first_antenna.direction_to(second_antenna)
 
-                first_antinode = second_antenna.location.move_in(direction)
+                first_antinode = second_antenna.move_in(direction)
                 if self._is_location_on_map(first_antinode):
                     antinodes.add(first_antinode)
 
-                second_antinode = first_antenna.location.move_in(-direction)
+                second_antinode = first_antenna.move_in(-direction)
                 if self._is_location_on_map(second_antinode):
                     antinodes.add(second_antinode)
 
@@ -61,10 +56,10 @@ class Map(NamedTuple):
         for antenna_list in self.antenna_locations.values():
             for combination in combinations(antenna_list, r=2):
                 first_antenna, second_antenna = combination
-                direction = first_antenna.location.direction_to(second_antenna.location)
+                direction = first_antenna.direction_to(second_antenna)
                 forward_direction = direction.reduce()
                 backward_direction = -forward_direction
-                current_location: Location = first_antenna.location
+                current_location: Location = first_antenna
 
                 # First go forwards
                 while self._is_location_on_map(current_location):
@@ -72,7 +67,7 @@ class Map(NamedTuple):
                     current_location = current_location.move_in(forward_direction)
 
                 # Then go backwards
-                current_location = first_antenna.location
+                current_location = first_antenna
                 while self._is_location_on_map(current_location):
                     antinodes.add(current_location)
                     current_location = current_location.move_in(backward_direction)
@@ -93,14 +88,13 @@ def parse(file: Path) -> Map:
 def _parse(lines: list[str]) -> Map:
     rows: int = len(lines)
     columns: int = len(lines[0].strip()) if rows > 0 else 0
-    antenna_locations: defaultdict[str, list[Antenna]] = defaultdict(list)
+    antenna_locations: defaultdict[str, list[Location]] = defaultdict(list)
 
     for row_index, row in enumerate(lines):
         for column_index, cell in enumerate(row.strip()):
             if cell == ".":
                 continue
-            location: Location = Location(row_index, column_index)
-            antenna: Antenna = Antenna(location, cell)
+            antenna: Location = Location(row_index, column_index)
             antenna_locations[cell].append(antenna)
     return Map(rows, columns, dict(antenna_locations))
 
