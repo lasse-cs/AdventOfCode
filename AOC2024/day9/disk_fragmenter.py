@@ -4,64 +4,59 @@ from heapq import heappop, heappush
 
 Disk = list[int | None]
 
+# Basically a dictionary of gap length to a heap of start indices
+# Max gap length will care about is 9, so use a list over dict
+GapLengths = list[list[int]]
+
 
 def fragment(disk: Disk):
-    left: int = 0
-    right: int = len(disk) - 1
-    while left <= right:
-        if disk[left] is not None:
-            left += 1
-        elif disk[right] is None:
-            right -= 1
+    gap_pointer: int = 0
+    file_pointer: int = len(disk) - 1
+    while gap_pointer < file_pointer:
+        if disk[gap_pointer] is not None:
+            gap_pointer += 1
+        elif disk[file_pointer] is None:
+            file_pointer -= 1
         else:
-            disk[left], disk[right] = disk[right], disk[left]
+            disk[gap_pointer], disk[file_pointer] = (
+                disk[file_pointer],
+                disk[gap_pointer],
+            )
 
 
 def defragment(disk: Disk):
-    gap_lengths: list[list[int]] = read_gaps(disk)
-
-    right: int = len(disk) - 1
-    file_length: int = 0
+    gap_lengths: GapLengths = read_gaps(disk)
 
     seen_files: set[int] = set()
 
-    while right > 0:
-        id = disk[right]
+    file_start: int = len(disk) - 1
+    file_length: int = 0
+    while file_start > 0:
+        id: int | None = disk[file_start]
         if id is None or id in seen_files:
-            right -= 1
+            file_start -= 1
             continue
 
         file_length += 1
-        if right == 0 or disk[right - 1] != id:
-            _fill_gap(disk, gap_lengths, file_length, right)
+        if file_start == 0 or disk[file_start - 1] != id:
+            _move_file(disk, gap_lengths, file_length, file_start)
             file_length = 0
             seen_files.add(id)
-        right -= 1
+        file_start -= 1
 
 
-def _fill_gap(
-    disk: Disk, gap_lengths: list[list[int]], file_length: int, file_start: int
-):
+def _move_file(
+    disk: Disk, gap_lengths: GapLengths, file_length: int, file_start: int
+) -> None:
     gap_length = _find_gap(gap_lengths, file_length, file_start)
-
     if gap_length == 0:
         return
-
     gap_start = heappop(gap_lengths[gap_length])
-
-    for index in range(file_length):
-        disk[gap_start + index], disk[file_start + index] = (
-            disk[file_start + index],
-            disk[gap_start + index],
-        )
-
-    if gap_length > file_length:
-        new_gap_start = gap_start + file_length
-        new_gap_length = gap_length - file_length
-        heappush(gap_lengths[new_gap_length], new_gap_start)
+    _fill_gap(disk, gap_start, file_length, file_start)
+    _update_gaps(gap_lengths, gap_length, gap_start, file_length)
 
 
-def _find_gap(gap_lengths: list[list[int]], file_length: int, file_start: int) -> int:
+def _find_gap(gap_lengths: GapLengths, file_length: int, file_start: int) -> int:
     earlist_gap: int = file_start
     earliest_gap_length: int = 0
     for gap_length in range(file_length, 10):
@@ -75,8 +70,32 @@ def _find_gap(gap_lengths: list[list[int]], file_length: int, file_start: int) -
     return earliest_gap_length
 
 
-def read_gaps(disk: Disk) -> list[list[int]]:
-    gap_lengths: list[list[int]] = [[] for _ in range(10)]
+def _fill_gap(
+    disk: Disk,
+    gap_start: int,
+    file_length: int,
+    file_start: int,
+) -> None:
+    for index in range(file_length):
+        disk[gap_start + index], disk[file_start + index] = (
+            disk[file_start + index],
+            disk[gap_start + index],
+        )
+
+
+def _update_gaps(
+    gap_lengths: GapLengths, gap_length: int, gap_start: int, file_length: int
+) -> None:
+    if gap_length <= file_length:
+        return
+
+    new_gap_start: int = gap_start + file_length
+    new_gap_length: int = gap_length - file_length
+    heappush(gap_lengths[new_gap_length], new_gap_start)
+
+
+def read_gaps(disk: Disk) -> GapLengths:
+    gap_lengths: GapLengths = [[] for _ in range(10)]
     gap_length: int = 0
     gap_start: int = 0
     for index, id in enumerate(disk):
@@ -94,7 +113,7 @@ def read_gaps(disk: Disk) -> list[list[int]]:
     return gap_lengths
 
 
-def calculate_checksum(disk: Disk):
+def calculate_checksum(disk: Disk) -> int:
     return sum(index * digit for index, digit in enumerate(disk) if digit is not None)
 
 

@@ -5,6 +5,7 @@ from disk_fragmenter import (
     parse,
     parse_file,
     Disk,
+    GapLengths,
     fragment,
     calculate_checksum,
     read_gaps,
@@ -47,8 +48,8 @@ def test_calculate_checksum(test_disk: Disk):
 
 
 def test_read_gaps(simple_disk: Disk):
-    gaps: list[list[int]] = read_gaps(simple_disk)
-    expected: list[list[int]] = [
+    gaps: GapLengths = read_gaps(simple_disk)
+    expected: GapLengths = [
         [],
         [],
         [1],
