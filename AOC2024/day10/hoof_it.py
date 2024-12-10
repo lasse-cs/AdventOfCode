@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import NamedTuple
 from collections.abc import Iterable
+from collections import deque
 
 
 class Direction(NamedTuple):
@@ -36,6 +37,9 @@ class TopographicMap:
         return 0 <= cl.column < len(self._cells[cl.row])
 
     def _get_successors(self, cl: CellLocation) -> list[CellLocation]:
+        if self[cl] == 9:
+            return []
+
         successors = []
         for direction in self._directions:
             next_location = cl.move_in(direction)
@@ -46,22 +50,33 @@ class TopographicMap:
         return successors
 
     def score_trailhead(self, trailhead: CellLocation) -> int:
-        frontier: list[CellLocation] = [trailhead]
-        ends: set[CellLocation] = set()
-        visited: set[CellLocation] = set()
+        ends: dict[CellLocation, int] = self._explore_trailhead(trailhead)
+        return len(ends)
+
+    def rate_trailhead(self, trailhead: CellLocation) -> int:
+        ends: dict[CellLocation, int] = self._explore_trailhead(trailhead)
+        return sum(ends.values())
+
+    def _explore_trailhead(self, trailhead: CellLocation) -> dict[CellLocation, int]:
+        frontier: deque[CellLocation] = deque()
+        frontier.append(trailhead)
+        ends: dict[CellLocation, int] = {}
+        visited: dict[CellLocation, int] = {trailhead: 1}
 
         while len(frontier) > 0:
-            current: CellLocation = frontier.pop()
+            current = frontier.popleft()
+            paths = visited[current]
             if self[current] == 9:
-                ends.add(current)
+                ends[current] = paths
                 continue
 
             for successor in self._get_successors(current):
                 if successor in visited:
+                    visited[successor] += paths
                     continue
-                visited.add(successor)
+                visited[successor] = paths
                 frontier.append(successor)
-        return len(ends)
+        return ends
 
     def score_map(self) -> int:
         total: int = 0
@@ -70,6 +85,15 @@ class TopographicMap:
                 if cell != 0:
                     continue
                 total += self.score_trailhead(CellLocation(row_index, column_index))
+        return total
+
+    def rate_map(self) -> int:
+        total: int = 0
+        for row_index, row in enumerate(self._cells):
+            for column_index, cell in enumerate(row):
+                if cell != 0:
+                    continue
+                total += self.rate_trailhead(CellLocation(row_index, column_index))
         return total
 
     @staticmethod
@@ -95,3 +119,6 @@ if __name__ == "__main__":
     map: TopographicMap = parse(file)
     score: int = map.score_map()
     print(f"The map has score {score}")
+
+    rating: int = map.rate_map()
+    print(f"The map has rating {rating}")
