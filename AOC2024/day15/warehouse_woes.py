@@ -83,12 +83,11 @@ class Warehouse:
         frontier: deque[WarehouseLocation] | None
         frontier = deque()
         frontier.append(self.robot_location)
+        frontier = self._expand_frontier(frontier, direction)
 
         while frontier:
             for location in frontier:
-                current_object = self[location]
-                if current_object in BOX_OBJECTS:
-                    boxes.append(location)
+                boxes.append(location)
             frontier = self._expand_frontier(frontier, direction)
 
         if frontier is None:
