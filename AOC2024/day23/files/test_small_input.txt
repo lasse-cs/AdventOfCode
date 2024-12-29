@@ -1,0 +1,4 @@
+kh-tc
+qp-kh
+tc-qp
+tc-dd
