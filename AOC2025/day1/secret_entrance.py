@@ -6,11 +6,11 @@ from typing import Literal, Self
 
 @dataclass(frozen=True)
 class Instruction:
-    direction: Literal["L", "R"]
+    direction: str
     distance: int
 
     @staticmethod
-    def parse(input: str) -> "Self":
+    def parse(input: str) -> "Instruction":
         return Instruction(direction=input[0], distance=int(input[1:]))
 
 
@@ -33,7 +33,7 @@ class Dial:
                 turns += 1
         return turns
 
-    def password(self, instructions: list[Instruction]):
+    def password(self, instructions: list[Instruction]) -> tuple[int, int]:
         zero_stops = 0
         total_turns = 0
         for instruction in instructions:
