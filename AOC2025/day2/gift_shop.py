@@ -17,53 +17,56 @@ class Range:
     def doubles(self) -> list[int]:
         return self.repeats(2)
 
-    def repeats(self, repeat_times) -> list[int]:
+    def _get_chunks(self, string: str, repeat_times: int) -> list[int]:
+        chunk_length = len(string) // repeat_times
+        return [
+            int(string[i * chunk_length : (i + 1) * chunk_length])
+            for i in range(repeat_times)
+        ]
+
+    def _get_first_different_chunk(self, chunks: list[int]) -> int | None:
+        first_chunk = chunks[0]
+        for c in chunks:
+            if c != first_chunk:
+                return c
+        return None
+
+    def _get_lowest_possible(self, repeat_times: int) -> int:
         start_str = str(self.start)
         num_start_digits = len(start_str)
         if num_start_digits % repeat_times == 0:
-            chunk_length = num_start_digits // repeat_times
-            chunks = [
-                int(start_str[i * chunk_length : (i + 1) * chunk_length])
-                for i in range(repeat_times)
-            ]
-            non_equals = [x for x in chunks if x != chunks[0]]
-            if len(non_equals) == 0:
+            chunks = self._get_chunks(start_str, repeat_times)
+            first_different = self._get_first_different_chunk(chunks)
+            if first_different is None or chunks[0] > first_different:
                 lowest = chunks[0]
-            elif chunks[0] < non_equals[0]:
-                lowest = chunks[0] + 1
             else:
-                lowest = chunks[0]
+                lowest = chunks[0] + 1
         else:
             lowest = 10 ** ((num_start_digits - 1) // repeat_times)
+        return lowest
 
+    def _get_highest_possible(self, repeat_times: int) -> int:
         end_str = str(self.end)
         num_end_digits = len(end_str)
         if num_end_digits % repeat_times == 0:
-            chunk_length = num_end_digits // repeat_times
-            chunks = [
-                int(end_str[i * chunk_length : (i + 1) * chunk_length])
-                for i in range(repeat_times)
-            ]
-            non_equals = [x for x in chunks if x != chunks[0]]
-            if len(non_equals) == 0:
+            chunks = self._get_chunks(end_str, repeat_times)
+            first_different = self._get_first_different_chunk(chunks)
+            if first_different is None or chunks[0] < first_different:
                 highest = chunks[0]
-            elif chunks[0] > non_equals[0]:
-                highest = chunks[0] - 1
             else:
-                highest = chunks[0]
+                highest = chunks[0] - 1
         else:
             highest = 10 ** ((num_end_digits - 1) // repeat_times) - 1
+        return highest
 
+    def repeats(self, repeat_times: int) -> list[int]:
+        lowest = self._get_lowest_possible(repeat_times)
+        highest = self._get_highest_possible(repeat_times)
         return [int(str(x) * repeat_times) for x in range(lowest, highest + 1)]
 
     def all_repeats(self) -> set[int]:
         max_times = len(str(self.end))
-        result = set()
-        for x in range(2, max_times + 1):
-            repeats = self.repeats(x)
-            for n in repeats:
-                result.add(n)
-        return result
+        return {n for x in range(2, max_times + 1) for n in self.repeats(x)}
 
 
 def parse_ranges(input_text: str) -> list[Range]:
@@ -71,19 +74,11 @@ def parse_ranges(input_text: str) -> list[Range]:
 
 
 def sum_doubles(ranges: list[Range]) -> int:
-    result = 0
-    for r in ranges:
-        for d in r.doubles():
-            result += d
-    return result
+    return sum(d for r in ranges for d in r.doubles())
 
 
 def sum_repeats(ranges: list[Range]) -> int:
-    result = 0
-    for r in ranges:
-        for d in r.all_repeats():
-            result += d
-    return result
+    return sum(d for r in ranges for d in r.all_repeats())
 
 
 def main():
