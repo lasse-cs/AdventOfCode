@@ -8,6 +8,9 @@ class Location(StrEnum):
     ROLL = "@"
 
 
+DIRECTIONS = [(r, c) for r in (-1, 0, 1) for c in (-1, 0, 1) if r != 0 or c != 0]
+
+
 class Grid:
     def __init__(self, grid: list[list[Location]]):
         self.grid = grid
@@ -37,15 +40,10 @@ class Grid:
     def set(self, row: int, column: int, location: Location):
         self.grid[row][column] = location
 
-    def count_roll_neighbours(self, row, column) -> int:
-        count = 0
-        for r in [-1, 0, 1]:
-            for c in [-1, 0, 1]:
-                if r == 0 and c == 0:
-                    continue
-                neighbour = self.get(row + r, column + c)
-                count += 1 if neighbour is Location.ROLL else 0
-        return count
+    def count_roll_neighbours(self, row: int, column: int) -> int:
+        return sum(
+            self.get(row + d[0], column + d[1]) is Location.ROLL for d in DIRECTIONS
+        )
 
     def is_accessible(self, row: int, column: int) -> bool:
         return self.count_roll_neighbours(row, column) < 4
@@ -73,10 +71,6 @@ class Grid:
 
 
 def main():
-    pass
-
-
-if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", type=Path)
     args = parser.parse_args()
@@ -84,3 +78,7 @@ if __name__ == "__main__":
     grid = Grid.parse(args.filename.read_text())
     print(grid.count_accessible_rolls())
     print(grid.count_all_accessible_rolls())
+
+
+if __name__ == "__main__":
+    main()
