@@ -1,4 +1,5 @@
 import argparse
+from functools import reduce
 from operator import add, mul
 from pathlib import Path
 import re
@@ -6,29 +7,17 @@ import re
 
 class Problem:
     def __init__(self, operation, numbers):
-        self.operation = self.parse_operation(operation)
+        self.operation = operation
         self.numbers = numbers
 
     def solve(self):
-        result = None
-        for num in self.numbers:
-            if result is None:
-                result = num
-            else:
-                result = self.operation(result, num)
-        return result
-
-    def parse_operation(self, symbol):
-        if symbol == "*":
-            return mul
-        elif symbol == "+":
-            return add
+        if self.operation == "+":
+            return reduce(add, self.numbers, 0)
+        else:
+            return reduce(mul, self.numbers, 1)
 
     def __eq__(self, other):
         return self.numbers == other.numbers and self.operation == other.operation
-
-    def __repr__(self):
-        return f"Problem({self.operation}, {self.numbers})"
 
 
 def _get_operators(line: str) -> list[str]:
